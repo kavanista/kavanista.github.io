@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jk-home-ledger - authorisation callback</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         max-width: 42rem; margin: 3rem auto; padding: 0 1.25rem; line-height: 1.6; color: #1c1c1c; }
+  h1 { font-size: 1.4rem; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  pre { background: #f4f4f4; padding: 0.75rem; border-radius: 6px; overflow-x: auto; word-break: break-all; white-space: pre-wrap; }
+  button { font-size: 1rem; padding: 0.5rem 0.9rem; border-radius: 6px; border: 1px solid #999;
+           background: #0b5fff; color: #fff; cursor: pointer; margin-right: 0.5rem; }
+  .muted { color: #666; font-size: 0.9rem; }
+  .err { color: #b00020; font-weight: 600; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #111; color: #e8e8e8; } pre { background: #1e1e1e; } .muted { color: #999; }
+    .err { color: #ff6b81; }
+  }
+</style>
+</head>
+<body>
+<h1>Authorisation callback</h1>
+<p class="muted">This page receives the redirect from the bank and hands the authorisation code to the local
+jk-home-ledger client. Nothing is sent anywhere else. The code stays in your browser.</p>
+
+<div id="out"></div>
+
+<p>
+  <button id="fwd">Send to local client</button>
+  <button id="copy">Copy code</button>
+</p>
+<p class="muted">Local client target: <code id="target"></code></p>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var code = q.get('code');
+  var state = q.get('state');
+  var error = q.get('error');
+  var target = 'http://localhost:8080/callback' + location.search;
+  document.getElementById('target').textContent = target;
+
+  var out = document.getElementById('out');
+  if (error) {
+    out.innerHTML = '<p class="err">The bank returned an error: ' +
+      error.replace(/[<>&]/g, '') + '</p>';
+  } else if (code) {
+    out.innerHTML = '<p>Authorisation code received' + (state ? ' (state: <code>' +
+      state.replace(/[<>&]/g, '') + '</code>)' : '') + ':</p><pre id="codebox">' +
+      code.replace(/[<>&]/g, '') + '</pre>';
+  } else {
+    out.innerHTML = '<p class="muted">No authorisation code in the URL. Open this page only via the ' +
+      'redirect from your bank.</p>';
+  }
+
+  document.getElementById('fwd').addEventListener('click', function () {
+    location.href = target;
+  });
+  document.getElementById('copy').addEventListener('click', function () {
+    if (code) { navigator.clipboard.writeText(code); }
+  });
+
+  // Hand off automatically if the local client is expected to be listening.
+  if (code) { setTimeout(function () { location.href = target; }, 1200); }
+})();
+</script>
+</body>
+</html>
