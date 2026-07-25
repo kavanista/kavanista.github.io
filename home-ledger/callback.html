@@ -39,7 +39,10 @@ jk-home-ledger client. Nothing is sent anywhere else. The code stays in your bro
   var code = q.get('code');
   var state = q.get('state');
   var error = q.get('error');
-  var target = 'http://localhost:8080/callback' + location.search;
+  // The local client encodes its listener port in the state, as "p<port>.<uuid>".
+  var m = /^p(\d{2,5})\./.exec(state || '');
+  var port = m ? m[1] : '8080';
+  var target = 'http://localhost:' + port + '/callback' + location.search;
   document.getElementById('target').textContent = target;
 
   var out = document.getElementById('out');
